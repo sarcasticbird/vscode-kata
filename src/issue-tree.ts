@@ -211,7 +211,7 @@ export class IssueTreeProvider
               : issue.body;
           tooltipLines.push(preview);
         }
-        if (issue.labels.length > 0) {
+        if (issue.labels && issue.labels.length > 0) {
           tooltipLines.push(`**Labels:** ${issue.labels.join(", ")}`);
         }
         if (issue.priority !== null) {

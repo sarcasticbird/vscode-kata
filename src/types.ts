@@ -42,14 +42,15 @@ export interface KataLabel {
 }
 
 export interface KataListIssue extends KataIssue {
-  short_id: string;
-  qualified_id: string;
-  labels: string[];
-  parent_short_id: string | null;
-  child_counts: { open: number; total: number } | null;
-  blocks: Array<{ uid: string; short_id: string }>;
-  blocked_by: Array<{ uid: string; short_id: string }>;
-  related: Array<{ uid: string; short_id: string }>;
+  short_id?: string;
+  qualified_id?: string;
+  labels?: string[];
+  parent_short_id?: string | null;
+  parent_number?: number | null;
+  child_counts?: { open: number; total: number } | null;
+  blocks?: Array<{ uid: string; short_id: string }>;
+  blocked_by?: Array<{ uid: string; short_id: string }>;
+  related?: Array<{ uid: string; short_id: string }>;
 }
 
 export interface KataShowResponse {
