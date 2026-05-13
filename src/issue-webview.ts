@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as crypto from "node:crypto";
+import { execFile } from "node:child_process";
 import { marked } from "marked";
 import type { KataClient } from "./kata-client.js";
 import type { KataShowResponse } from "./types.js";
@@ -25,7 +26,9 @@ export class IssueWebviewManager {
       action: string,
       issueRef: string,
       workspacePath: string,
-      reason?: string
+      reason?: string,
+      message?: string,
+      evidence?: string[]
     ) => Promise<void>,
     private readonly onMutation?: () => void
   ) {
@@ -62,7 +65,29 @@ export class IssueWebviewManager {
             { placeHolder: "Select close reason" }
           );
           if (!reason) return;
-          await this.onAction("close", msg.issueRef, msg.workspacePath, reason);
+          const minLen = reason === "wontfix" ? 60 : 40;
+          const message = await vscode.window.showInputBox({
+            prompt: `Close message (${minLen}+ chars required)`,
+            placeHolder: reason === "wontfix"
+              ? "Explain why this won't be fixed"
+              : "Describe what was done and how it was verified",
+            validateInput: (val) =>
+              val.trim().length < minLen
+                ? `Message must be at least ${minLen} characters (currently ${val.trim().length})`
+                : null,
+          });
+          if (!message) return;
+          const evidence = reason === "done"
+            ? await collectEvidence(msg.workspacePath)
+            : undefined;
+          if (reason === "done" && !evidence) return;
+          try {
+            await this.onAction("close", msg.issueRef, msg.workspacePath, reason, message, evidence);
+          } catch (err) {
+            const text = err instanceof Error ? err.message : "Unknown error";
+            vscode.window.showErrorMessage(`Failed to close issue: ${text}`);
+            return;
+          }
           await this.show(msg.issueRef, msg.workspacePath);
         }
         if (msg.command === "reopen") {
@@ -683,6 +708,45 @@ export class IssueWebviewManager {
       ${items.join("\n")}
     </div>`;
   }
+}
+
+async function getHeadSha(cwd: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    execFile("git", ["rev-parse", "HEAD"], { cwd, timeout: 3_000 }, (err, stdout) => {
+      resolve(err ? null : stdout.trim() || null);
+    });
+  });
+}
+
+export async function collectEvidence(workspacePath: string): Promise<string[] | undefined> {
+  const sha = await getHeadSha(workspacePath);
+  const items: vscode.QuickPickItem[] = [];
+  if (sha) {
+    items.push({ label: `commit:${sha.slice(0, 8)}`, description: `Use HEAD commit (${sha.slice(0, 8)})`, detail: sha });
+  }
+  items.push(
+    { label: "commit:...", description: "Enter a commit SHA" },
+    { label: "pr:...", description: "Enter a PR URL" },
+    { label: "test:...", description: "Enter a test command" },
+    { label: "reviewed-paths:...", description: "Enter a reviewed file path" },
+  );
+
+  const pick = await vscode.window.showQuickPick(items, {
+    placeHolder: "Select evidence type (required for done)",
+  });
+  if (!pick) return undefined;
+
+  if (pick.detail) {
+    return [`commit:${pick.detail}`];
+  }
+
+  const prefix = pick.label.replace("...", "");
+  const value = await vscode.window.showInputBox({
+    prompt: `Enter value for ${prefix}`,
+    placeHolder: prefix === "commit:" ? "SHA" : prefix === "pr:" ? "https://github.com/..." : prefix === "test:" ? "npm test" : "src/file.ts",
+  });
+  if (!value) return undefined;
+  return [`${prefix}${value.trim()}`];
 }
 
 function escapeHtml(text: string): string {
