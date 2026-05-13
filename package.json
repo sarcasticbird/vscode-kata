@@ -9,6 +9,10 @@
     "type": "git",
     "url": "https://github.com/sarcasticbird/vscode-kata"
   },
+  "homepage": "https://github.com/sarcasticbird/vscode-kata#readme",
+  "bugs": {
+    "url": "https://github.com/sarcasticbird/vscode-kata/issues"
+  },
   "license": "MIT",
   "engines": {
     "vscode": "^1.85.0"
