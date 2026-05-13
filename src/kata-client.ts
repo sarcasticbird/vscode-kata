@@ -120,15 +120,24 @@ export class KataClient {
   async closeIssue(
     issueRef: string,
     reason: string,
-    workspacePath: string
+    message: string,
+    workspacePath: string,
+    evidence?: string[]
   ): Promise<void> {
-    await this.exec([
+    const args = [
       "close",
       issueRef,
       "--reason", reason,
+      "--message", message,
       "--json",
       "--workspace", workspacePath,
-    ], { timeout: 10_000 });
+    ];
+    if (evidence) {
+      for (const e of evidence) {
+        args.push("--evidence", e);
+      }
+    }
+    await this.exec(args, { timeout: 10_000 });
   }
 
   async reopenIssue(
@@ -261,7 +270,7 @@ export class KataClient {
       const timeout = options?.timeout ?? 5_000;
       const maxBuffer = options?.maxBuffer ?? 5 * 1024 * 1024;
       const redacted = args.map((a, i) =>
-        i > 0 && ["--body", "--title"].includes(args[i - 1]) ? "[redacted]" : a
+        i > 0 && ["--body", "--title", "--message"].includes(args[i - 1]) ? "[redacted]" : a
       );
       this.outputChannel.appendLine(`${binary} ${redacted.join(" ")}`);
 

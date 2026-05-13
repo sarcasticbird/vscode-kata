@@ -3,7 +3,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import { KataClient } from "./kata-client.js";
 import { IssueTreeProvider } from "./issue-tree.js";
-import { IssueWebviewManager } from "./issue-webview.js";
+import { IssueWebviewManager, collectEvidence } from "./issue-webview.js";
 
 let pollTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -114,9 +114,9 @@ export function activate(context: vscode.ExtensionContext): void {
   const webviewManager = new IssueWebviewManager(
     client,
     outputChannel,
-    async (action, issueRef, workspacePath, reason) => {
-      if (action === "close" && reason) {
-        await client.closeIssue(issueRef, reason, workspacePath);
+    async (action, issueRef, workspacePath, reason, message, evidence) => {
+      if (action === "close" && reason && message) {
+        await client.closeIssue(issueRef, reason, message, workspacePath, evidence);
       } else if (action === "reopen") {
         await client.reopenIssue(issueRef, workspacePath);
       }
@@ -152,11 +152,35 @@ export function activate(context: vscode.ExtensionContext): void {
             { placeHolder: "Select close reason" }
           );
           if (!reason) return;
-          await client.closeIssue(
-            item.issueRef,
-            reason,
-            item.workspacePath
-          );
+          const minLen = reason === "wontfix" ? 60 : 40;
+          const message = await vscode.window.showInputBox({
+            prompt: `Close message (${minLen}+ chars required)`,
+            placeHolder: reason === "wontfix"
+              ? "Explain why this won't be fixed"
+              : "Describe what was done and how it was verified",
+            validateInput: (val) =>
+              val.trim().length < minLen
+                ? `Message must be at least ${minLen} characters (currently ${val.trim().length})`
+                : null,
+          });
+          if (!message) return;
+          const evidence = reason === "done"
+            ? await collectEvidence(item.workspacePath)
+            : undefined;
+          if (reason === "done" && !evidence) return;
+          try {
+            await client.closeIssue(
+              item.issueRef,
+              reason,
+              message,
+              item.workspacePath,
+              evidence
+            );
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : "Unknown error";
+            vscode.window.showErrorMessage(`Failed to close issue: ${msg}`);
+            return;
+          }
           await treeProvider.refresh();
           updateBadge();
         }

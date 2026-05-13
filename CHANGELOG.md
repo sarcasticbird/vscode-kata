@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Fix close issue: prompt for required close message (upstream kata now requires `--message`)
+
 ## 0.1.2
 
 - Fix #undefined issues: use kata `short_id` instead of removed `number` field
