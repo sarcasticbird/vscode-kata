@@ -1,0 +1,5 @@
+version = 1
+
+[project]
+identity = "local:///Users/cdolan/Projects/vscode-kata"
+name     = "vscode-kata"
