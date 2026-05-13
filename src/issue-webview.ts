@@ -1,8 +1,17 @@
 import * as vscode from "vscode";
+import * as crypto from "node:crypto";
 import { marked } from "marked";
 import type { KataClient } from "./kata-client.js";
 import type { KataShowResponse } from "./types.js";
 import { relativeTime } from "./types.js";
+
+marked.use({
+  renderer: {
+    html() {
+      return "";
+    },
+  },
+});
 
 export class IssueWebviewManager {
   private panel: vscode.WebviewPanel | undefined;
@@ -80,6 +89,7 @@ export class IssueWebviewManager {
   private buildHtml(data: KataShowResponse, workspacePath: string): string {
     const issue = data.issue;
     const issueRef = String(issue.number);
+    const nonce = crypto.randomBytes(16).toString("base64");
 
     const statusLabel =
       issue.status === "open"
@@ -95,10 +105,12 @@ export class IssueWebviewManager {
           ? "done"
           : "closed";
 
+    const closeMsg = JSON.stringify({ command: "close", issueRef, workspacePath });
+    const reopenMsg = JSON.stringify({ command: "reopen", issueRef, workspacePath });
     const actionButtons =
       issue.status === "open"
-        ? `<button class="btn btn-primary" onclick="postMessage({ command: 'close', issueRef: '${issueRef}', workspacePath: '${escapeHtml(workspacePath)}' })">Close</button>`
-        : `<button class="btn btn-secondary" onclick="postMessage({ command: 'reopen', issueRef: '${issueRef}', workspacePath: '${escapeHtml(workspacePath)}' })">Reopen</button>`;
+        ? `<button class="btn btn-primary" data-msg="${escapeAttr(closeMsg)}">Close</button>`
+        : `<button class="btn btn-secondary" data-msg="${escapeAttr(reopenMsg)}">Reopen</button>`;
 
     const labels = data.labels ?? [];
     const labelsHtml =
@@ -140,6 +152,7 @@ export class IssueWebviewManager {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'">
   <style>
     body {
       font-family: var(--vscode-font-family);
@@ -317,16 +330,19 @@ export class IssueWebviewManager {
   ${labelsHtml}
   <div class="actions">
     ${actionButtons}
-    <button class="btn btn-secondary" onclick="postMessage({ command: 'openTui' })">Open TUI</button>
+    <button class="btn btn-secondary" data-msg="${escapeAttr(JSON.stringify({ command: "openTui" }))}">Open TUI</button>
   </div>
   <div class="body">${bodyHtml}</div>
   ${relationshipsHtml}
   ${commentsHtml}
-  <script>
+  <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
-    function postMessage(msg) {
-      vscode.postMessage(msg);
-    }
+    document.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-msg]');
+      if (!el) return;
+      e.preventDefault();
+      vscode.postMessage(JSON.parse(el.dataset.msg));
+    });
   </script>
 </body>
 </html>`;
@@ -343,10 +359,11 @@ export class IssueWebviewManager {
     if (data.parent) {
       const parentRef = String(data.parent.number ?? data.parent.short_id ?? "");
       const parentTitle = data.parent.title ?? "";
+      const parentMsg = JSON.stringify({ command: "showIssue", issueRef: parentRef, workspacePath });
       items.push(
         `<div class="rel-item">
           <span class="rel-type">Parent</span>
-          <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${parentRef}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
+          <a class="rel-link" href="#" data-msg="${escapeAttr(parentMsg)}">
             #${escapeHtml(parentRef)} — ${escapeHtml(parentTitle)}
           </a>
           <span class="muted">(${data.parent.status})</span>
@@ -358,10 +375,11 @@ export class IssueWebviewManager {
       const childRef = String((child as Record<string, unknown>).number ?? (child as Record<string, unknown>).short_id ?? "");
       const childTitle = ((child as Record<string, unknown>).title as string) ?? "";
       const childStatus = ((child as Record<string, unknown>).status as string) ?? "";
+      const childMsg = JSON.stringify({ command: "showIssue", issueRef: childRef, workspacePath });
       items.push(
         `<div class="rel-item">
           <span class="rel-type">Child</span>
-          <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${childRef}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
+          <a class="rel-link" href="#" data-msg="${escapeAttr(childMsg)}">
             #${escapeHtml(childRef)} — ${escapeHtml(childTitle)}
           </a>
           <span class="muted">(${childStatus})</span>
@@ -373,10 +391,11 @@ export class IssueWebviewManager {
       if (link.type === "parent") continue;
       const label = link.type === "blocks" ? "Blocks" : "Related";
       const targetRef = String(link.to_number ?? link.to?.short_id ?? "");
+      const linkMsg = JSON.stringify({ command: "showIssue", issueRef: targetRef, workspacePath });
       items.push(
         `<div class="rel-item">
           <span class="rel-type">${label}</span>
-          <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${targetRef}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
+          <a class="rel-link" href="#" data-msg="${escapeAttr(linkMsg)}">
             #${escapeHtml(targetRef)}
           </a>
         </div>`
@@ -398,4 +417,13 @@ function escapeHtml(text: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function escapeAttr(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }

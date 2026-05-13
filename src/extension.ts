@@ -63,7 +63,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const client = new KataClient(outputChannel);
 
   const initialFolders = vscode.workspace.workspaceFolders ?? [];
-  const projectPaths =
+  let projectPaths =
     initialFolders.length > 0
       ? discoverProjects(initialFolders, outputChannel)
       : [];
@@ -89,11 +89,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const rediscoverProjects = async () => {
     const folders = vscode.workspace.workspaceFolders;
-    const newPaths =
+    projectPaths =
       folders && folders.length > 0
         ? discoverProjects(folders, outputChannel)
         : [];
-    treeProvider.updateProjectPaths(newPaths);
+    treeProvider.updateProjectPaths(projectPaths);
     await treeProvider.refresh();
     updateBadge();
   };
