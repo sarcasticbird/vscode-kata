@@ -67,7 +67,7 @@ export class IssueTreeProvider
       this.available = await this.client.isAvailable();
       if (!this.available) {
         this.errorMessage =
-          "kata CLI not found — install from github.com/sarcasticbird/kata";
+          "kata CLI not found — install from github.com/wesm/kata";
         this.projects = [];
         this._openCount = 0;
         this._onDidChangeTreeData.fire();

@@ -1,6 +1,6 @@
 {
   "name": "vscode-kata",
-  "displayName": "kata",
+  "displayName": "kata for VS Code",
   "description": "kata issue tracking in VS Code",
   "version": "0.1.0",
   "publisher": "sarcasticbird",

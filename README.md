@@ -1,6 +1,6 @@
 # kata for VS Code
 
-Manage [kata](https://github.com/sarcasticbird/kata) issues directly from VS Code. kata is a lightweight, local-first issue tracker designed for developers and AI agents.
+Manage [kata](https://github.com/wesm/kata) issues directly from VS Code. kata is a lightweight, local-first issue tracker designed for developers and AI agents.
 
 <img width="1109" height="745" alt="image" src="https://github.com/user-attachments/assets/fcaaec8c-a0cb-4c18-b82e-ac39e4c16e4e" />
 
@@ -15,7 +15,7 @@ Manage [kata](https://github.com/sarcasticbird/kata) issues directly from VS Cod
 
 ## Requirements
 
-- [kata CLI](https://github.com/sarcasticbird/kata) installed and on your PATH
+- [kata CLI](https://github.com/wesm/kata) installed and on your PATH
 - kata daemon running (`kata daemon start`)
 - At least one project initialized (`kata init` in your workspace)
 
