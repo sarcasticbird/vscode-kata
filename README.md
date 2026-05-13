@@ -2,6 +2,8 @@
 
 Manage [kata](https://github.com/sarcasticbird/kata) issues directly from VS Code. kata is a lightweight, local-first issue tracker designed for developers and AI agents.
 
+<img width="1109" height="745" alt="image" src="https://github.com/user-attachments/assets/fcaaec8c-a0cb-4c18-b82e-ac39e4c16e4e" />
+
 ## What You Get
 
 - **Sidebar tree view** -- issues grouped by project and status (open/closed), with badge counts
