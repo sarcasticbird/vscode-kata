@@ -27,8 +27,12 @@ export interface KataComment {
 export interface KataLink {
   id: number;
   project_id: number;
-  from: { uid: string; short_id: string };
-  to: { uid: string; short_id: string };
+  from_number?: number;
+  from_issue_uid?: string;
+  to_number?: number;
+  to_issue_uid?: string;
+  from?: { uid: string; short_id: string };
+  to?: { uid: string; short_id: string };
   type: "parent" | "blocks" | "related";
   author: string;
   created_at: string;
@@ -56,23 +60,18 @@ export interface KataListIssue extends KataIssue {
 export interface KataShowResponse {
   kata_api_version: number;
   issue: KataIssue;
-  comments: KataComment[];
-  links: KataLink[];
-  labels: KataLabel[];
+  comments: KataComment[] | null;
+  links: KataLink[] | null;
+  labels: KataLabel[] | null;
   parent: {
-    uid: string;
-    short_id: string;
-    qualified_id: string;
-    title: string;
-    status: string;
+    uid?: string;
+    short_id?: string;
+    qualified_id?: string;
+    number?: number;
+    title?: string;
+    status?: string;
   } | null;
-  children: Array<{
-    uid: string;
-    short_id: string;
-    qualified_id: string;
-    title: string;
-    status: string;
-  }>;
+  children: Array<Record<string, unknown>> | null;
 }
 
 export interface KataListResponse {

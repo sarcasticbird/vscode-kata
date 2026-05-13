@@ -100,9 +100,10 @@ export class IssueWebviewManager {
         ? `<button class="btn btn-primary" onclick="postMessage({ command: 'close', issueRef: '${issueRef}', workspacePath: '${escapeHtml(workspacePath)}' })">Close</button>`
         : `<button class="btn btn-secondary" onclick="postMessage({ command: 'reopen', issueRef: '${issueRef}', workspacePath: '${escapeHtml(workspacePath)}' })">Reopen</button>`;
 
+    const labels = data.labels ?? [];
     const labelsHtml =
-      data.labels.length > 0
-        ? `<div class="labels">${data.labels.map((l) => `<span class="label">${escapeHtml(l.label)}</span>`).join(" ")}</div>`
+      labels.length > 0
+        ? `<div class="labels">${labels.map((l) => `<span class="label">${escapeHtml(l.label)}</span>`).join(" ")}</div>`
         : "";
 
     const bodyHtml = issue.body
@@ -111,11 +112,12 @@ export class IssueWebviewManager {
 
     const relationshipsHtml = this.buildRelationshipsHtml(data, workspacePath);
 
+    const comments = data.comments ?? [];
     const commentsHtml =
-      data.comments.length > 0
+      comments.length > 0
         ? `<div class="comments">
-        <h3>Comments (${data.comments.length})</h3>
-        ${data.comments
+        <h3>Comments (${comments.length})</h3>
+        ${comments
           .map(
             (c) => `<div class="comment">
             <div class="comment-header">
@@ -335,41 +337,47 @@ export class IssueWebviewManager {
     workspacePath: string
   ): string {
     const items: string[] = [];
+    const children = data.children ?? [];
+    const links = data.links ?? [];
 
     if (data.parent) {
+      const parentRef = String(data.parent.number ?? data.parent.short_id ?? "");
+      const parentTitle = data.parent.title ?? "";
       items.push(
         `<div class="rel-item">
           <span class="rel-type">Parent</span>
-          <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${data.parent.short_id}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
-            #${escapeHtml(data.parent.short_id)} — ${escapeHtml(data.parent.title)}
+          <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${parentRef}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
+            #${escapeHtml(parentRef)} — ${escapeHtml(parentTitle)}
           </a>
           <span class="muted">(${data.parent.status})</span>
         </div>`
       );
     }
 
-    if (data.children.length > 0) {
-      for (const child of data.children) {
-        items.push(
-          `<div class="rel-item">
-            <span class="rel-type">Child</span>
-            <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${child.short_id}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
-              #${escapeHtml(child.short_id)} — ${escapeHtml(child.title)}
-            </a>
-            <span class="muted">(${child.status})</span>
-          </div>`
-        );
-      }
+    for (const child of children) {
+      const childRef = String((child as Record<string, unknown>).number ?? (child as Record<string, unknown>).short_id ?? "");
+      const childTitle = ((child as Record<string, unknown>).title as string) ?? "";
+      const childStatus = ((child as Record<string, unknown>).status as string) ?? "";
+      items.push(
+        `<div class="rel-item">
+          <span class="rel-type">Child</span>
+          <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${childRef}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
+            #${escapeHtml(childRef)} — ${escapeHtml(childTitle)}
+          </a>
+          <span class="muted">(${childStatus})</span>
+        </div>`
+      );
     }
 
-    for (const link of data.links) {
+    for (const link of links) {
       if (link.type === "parent") continue;
       const label = link.type === "blocks" ? "Blocks" : "Related";
+      const targetRef = String(link.to_number ?? link.to?.short_id ?? "");
       items.push(
         `<div class="rel-item">
           <span class="rel-type">${label}</span>
-          <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${link.to.short_id}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
-            #${escapeHtml(link.to.short_id)}
+          <a class="rel-link" href="#" onclick="postMessage({ command: 'showIssue', issueRef: '${targetRef}', workspacePath: '${escapeHtml(workspacePath)}' }); return false">
+            #${escapeHtml(targetRef)}
           </a>
         </div>`
       );
