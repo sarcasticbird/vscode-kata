@@ -1,4 +1,9 @@
-.kata.local.toml
 node_modules/
 dist/
 *.vsix
+
+# personal dev tooling
+.kata.toml
+.kata.local.toml
+.roborev.toml
+.claude/

@@ -116,6 +116,11 @@ export interface KataCreateResponse {
   reused: boolean;
 }
 
+export interface KataLabelsResponse {
+  kata_api_version: number;
+  labels: { label: string; count: number }[];
+}
+
 export type IssueGroup = "open" | "closed";
 
 export function classifyIssue(issue: KataListIssue): IssueGroup {
