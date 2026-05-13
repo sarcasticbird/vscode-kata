@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Update extension icon to match vscode-roborev
+
 ## 0.1.0
 
 - Activity bar sidebar with issue tree grouped by project and status

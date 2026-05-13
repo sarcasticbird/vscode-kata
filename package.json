@@ -2,7 +2,7 @@
   "name": "vscode-kata",
   "displayName": "kata for VS Code",
   "description": "kata issue tracking in VS Code",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "sarcasticbird",
   "icon": "media/kata-icon.png",
   "repository": {
