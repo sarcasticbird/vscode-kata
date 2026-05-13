@@ -1,1 +1,4 @@
 .kata.local.toml
+node_modules/
+dist/
+*.vsix

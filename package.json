@@ -1,0 +1,121 @@
+{
+  "name": "vscode-kata",
+  "displayName": "kata",
+  "description": "kata issue tracking in VS Code",
+  "version": "0.1.0",
+  "publisher": "sarcasticbird",
+  "icon": "media/kata-icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sarcasticbird/vscode-kata"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "keywords": ["kata", "issue tracking", "task management"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kata",
+          "title": "kata",
+          "icon": "media/kata-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "kata": [
+        {
+          "id": "kataIssues",
+          "name": "Issues"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "kata.refresh",
+        "title": "kata: Refresh Issues",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "kata.showIssue",
+        "title": "kata: Show Issue"
+      },
+      {
+        "command": "kata.close",
+        "title": "kata: Close Issue"
+      },
+      {
+        "command": "kata.reopen",
+        "title": "kata: Reopen Issue"
+      },
+      {
+        "command": "kata.createIssue",
+        "title": "kata: Create Issue",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "kata.openTui",
+        "title": "kata: Open TUI",
+        "icon": "$(terminal)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "kata.createIssue",
+          "when": "view == kataIssues",
+          "group": "navigation"
+        },
+        {
+          "command": "kata.openTui",
+          "when": "view == kataIssues",
+          "group": "navigation"
+        },
+        {
+          "command": "kata.refresh",
+          "when": "view == kataIssues",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "kata.close",
+          "when": "view == kataIssues && viewItem == issueOpen"
+        },
+        {
+          "command": "kata.reopen",
+          "when": "view == kataIssues && viewItem == issueClosed"
+        },
+        {
+          "command": "kata.openTui",
+          "when": "view == kataIssues && viewItem =~ /^issue/"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "kataIssues",
+        "contents": "No kata projects found.\n\nRun `kata init` in your project to start tracking issues.\n\n[Open Terminal](command:workbench.action.terminal.new)"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.12",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "marked": "^15.0.0"
+  }
+}
