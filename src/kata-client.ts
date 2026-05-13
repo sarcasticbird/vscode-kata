@@ -6,6 +6,7 @@ import type {
   KataEventsResponse,
   KataHealthResponse,
   KataCreateResponse,
+  KataLabelsResponse,
 } from "./types.js";
 
 const HOMEBREW_PATHS = [
@@ -155,6 +156,88 @@ export class KataClient {
     return JSON.parse(output) as KataCreateResponse;
   }
 
+  async addComment(
+    issueRef: string,
+    body: string,
+    workspacePath: string
+  ): Promise<void> {
+    await this.exec([
+      "comment",
+      issueRef,
+      "--body", body,
+      "--json",
+      "--workspace", workspacePath,
+    ], { timeout: 10_000 });
+  }
+
+  async editIssue(
+    issueRef: string,
+    fields: { title?: string; body?: string; priority?: string },
+    workspacePath: string
+  ): Promise<void> {
+    const args = ["edit", issueRef, "--json", "--workspace", workspacePath];
+    if (fields.title !== undefined) {
+      args.push("--title", fields.title);
+    }
+    if (fields.body !== undefined) {
+      args.push("--body", fields.body);
+    }
+    if (fields.priority !== undefined) {
+      args.push("--priority", fields.priority);
+    }
+    await this.exec(args, { timeout: 10_000 });
+  }
+
+  async assignIssue(
+    issueRef: string,
+    owner: string,
+    workspacePath: string
+  ): Promise<void> {
+    await this.exec([
+      "assign", issueRef, owner,
+      "--json", "--workspace", workspacePath,
+    ], { timeout: 10_000 });
+  }
+
+  async unassignIssue(
+    issueRef: string,
+    workspacePath: string
+  ): Promise<void> {
+    await this.exec([
+      "unassign", issueRef,
+      "--json", "--workspace", workspacePath,
+    ], { timeout: 10_000 });
+  }
+
+  async addLabel(
+    issueRef: string,
+    label: string,
+    workspacePath: string
+  ): Promise<void> {
+    await this.exec([
+      "label", "add", issueRef, label,
+      "--json", "--workspace", workspacePath,
+    ], { timeout: 10_000 });
+  }
+
+  async removeLabel(
+    issueRef: string,
+    label: string,
+    workspacePath: string
+  ): Promise<void> {
+    await this.exec([
+      "label", "rm", issueRef, label,
+      "--json", "--workspace", workspacePath,
+    ], { timeout: 10_000 });
+  }
+
+  async listLabels(workspacePath: string): Promise<KataLabelsResponse> {
+    const output = await this.exec([
+      "labels", "--json", "--workspace", workspacePath,
+    ]);
+    return JSON.parse(output) as KataLabelsResponse;
+  }
+
   async pollEvents(
     workspacePath: string,
     afterId: number
@@ -177,7 +260,10 @@ export class KataClient {
       const binary = this.resolvedBinary ?? "kata";
       const timeout = options?.timeout ?? 5_000;
       const maxBuffer = options?.maxBuffer ?? 5 * 1024 * 1024;
-      this.outputChannel.appendLine(`${binary} ${args.join(" ")}`);
+      const redacted = args.map((a, i) =>
+        i > 0 && ["--body", "--title"].includes(args[i - 1]) ? "[redacted]" : a
+      );
+      this.outputChannel.appendLine(`${binary} ${redacted.join(" ")}`);
 
       execFile(
         binary,

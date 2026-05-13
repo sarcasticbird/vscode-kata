@@ -106,6 +106,11 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
+  const refreshTree = async () => {
+    await treeProvider.refresh();
+    updateBadge();
+  };
+
   const webviewManager = new IssueWebviewManager(
     client,
     outputChannel,
@@ -115,9 +120,9 @@ export function activate(context: vscode.ExtensionContext): void {
       } else if (action === "reopen") {
         await client.reopenIssue(issueRef, workspacePath);
       }
-      await treeProvider.refresh();
-      updateBadge();
-    }
+      await refreshTree();
+    },
+    () => { refreshTree(); }
   );
   context.subscriptions.push({ dispose: () => webviewManager.dispose() });
 
