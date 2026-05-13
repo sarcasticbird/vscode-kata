@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Fix #undefined issues: use kata `short_id` instead of removed `number` field
+- Correct upstream kata URLs to wesm/kata
+
 ## 0.1.1
 
 - Update extension icon to match vscode-roborev

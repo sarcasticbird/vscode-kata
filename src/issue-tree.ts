@@ -194,7 +194,7 @@ export class IssueTreeProvider
             : issue.title;
 
         const item = new IssueTreeItem(
-          `#${issue.number} — ${title}`,
+          `#${issue.short_id} — ${title}`,
           vscode.TreeItemCollapsibleState.None
         );
 
@@ -203,7 +203,7 @@ export class IssueTreeProvider
         parts.push(relativeTime(issue.updated_at));
         item.description = parts.join(" · ");
 
-        const tooltipLines = [`**#${issue.number} — ${issue.title}**`];
+        const tooltipLines = [`**#${issue.short_id} — ${issue.title}**`];
         if (issue.body) {
           const preview =
             issue.body.length > 200
@@ -222,7 +222,7 @@ export class IssueTreeProvider
         }
         item.tooltip = new vscode.MarkdownString(tooltipLines.join("\n\n"));
 
-        item.issueNumber = issue.number;
+        item.issueRef = issue.short_id;
         item.workspacePath = proj.path;
 
         if (issue.status === "open") {
@@ -248,7 +248,7 @@ export class IssueTreeProvider
         item.command = {
           command: "kata.showIssue",
           title: "Show Issue",
-          arguments: [String(issue.number), proj.path],
+          arguments: [issue.short_id, proj.path],
         };
 
         return item;
@@ -259,6 +259,6 @@ export class IssueTreeProvider
 export class IssueTreeItem extends vscode.TreeItem {
   group?: IssueGroup;
   projectName?: string;
-  issueNumber?: number;
+  issueRef?: string;
   workspacePath?: string;
 }

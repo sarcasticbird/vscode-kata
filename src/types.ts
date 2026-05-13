@@ -3,7 +3,7 @@ export interface KataIssue {
   uid: string;
   project_id: number;
   project_uid: string;
-  number: number;
+  short_id: string;
   title: string;
   body: string | null;
   status: "open" | "closed";
@@ -46,7 +46,6 @@ export interface KataLabel {
 }
 
 export interface KataListIssue extends KataIssue {
-  short_id?: string;
   qualified_id?: string;
   labels?: string[];
   parent_short_id?: string | null;
@@ -67,7 +66,6 @@ export interface KataShowResponse {
     uid?: string;
     short_id?: string;
     qualified_id?: string;
-    number?: number;
     title?: string;
     status?: string;
   } | null;
