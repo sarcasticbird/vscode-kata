@@ -145,15 +145,15 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "kata.close",
-      async (item: { issueNumber?: number; workspacePath?: string }) => {
-        if (item.issueNumber && item.workspacePath) {
+      async (item: { issueRef?: string; workspacePath?: string }) => {
+        if (item.issueRef && item.workspacePath) {
           const reason = await vscode.window.showQuickPick(
             ["done", "wontfix", "duplicate"],
             { placeHolder: "Select close reason" }
           );
           if (!reason) return;
           await client.closeIssue(
-            String(item.issueNumber),
+            item.issueRef,
             reason,
             item.workspacePath
           );
@@ -167,10 +167,10 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "kata.reopen",
-      async (item: { issueNumber?: number; workspacePath?: string }) => {
-        if (item.issueNumber && item.workspacePath) {
+      async (item: { issueRef?: string; workspacePath?: string }) => {
+        if (item.issueRef && item.workspacePath) {
           await client.reopenIssue(
-            String(item.issueNumber),
+            item.issueRef,
             item.workspacePath
           );
           await treeProvider.refresh();
@@ -201,7 +201,7 @@ export function activate(context: vscode.ExtensionContext): void {
         await treeProvider.refresh();
         updateBadge();
         await webviewManager.show(
-          String(response.issue.number),
+          response.issue.short_id,
           workspacePath
         );
       } catch (err) {

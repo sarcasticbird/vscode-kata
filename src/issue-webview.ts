@@ -181,7 +181,7 @@ export class IssueWebviewManager {
     }
 
     const issue = data.issue;
-    this.panel.title = `kata: #${issue.number} — ${issue.title}`;
+    this.panel.title = `kata: #${issue.short_id} — ${issue.title}`;
     this.panel.webview.html = this.buildHtml(data, workspacePath);
   }
 
@@ -191,7 +191,7 @@ export class IssueWebviewManager {
 
   private buildHtml(data: KataShowResponse, workspacePath: string): string {
     const issue = data.issue;
-    const issueRef = String(issue.number);
+    const issueRef = issue.short_id;
     const nonce = crypto.randomBytes(16).toString("base64");
 
     const statusLabel =
@@ -505,7 +505,7 @@ export class IssueWebviewManager {
   <div class="header">
     <span class="status ${statusClass}">${statusLabel}</span>
     <span class="header-title">
-      <span id="title-display">#${issue.number} — ${escapeHtml(issue.title)}</span>
+      <span id="title-display">#${issue.short_id} — ${escapeHtml(issue.title)}</span>
       <button class="btn-icon" id="edit-title-btn" title="Edit title">&#9998;</button>
       <span id="title-editor" style="display:none">
         <input type="text" id="title-input" value="${escapeAttr(issue.title)}" />
@@ -631,7 +631,7 @@ export class IssueWebviewManager {
     const links = data.links ?? [];
 
     if (data.parent) {
-      const parentRef = String(data.parent.number ?? data.parent.short_id ?? "");
+      const parentRef = String(data.parent.short_id ?? "");
       const parentTitle = data.parent.title ?? "";
       const parentMsg = JSON.stringify({ command: "showIssue", issueRef: parentRef, workspacePath });
       items.push(
@@ -646,7 +646,7 @@ export class IssueWebviewManager {
     }
 
     for (const child of children) {
-      const childRef = String((child as Record<string, unknown>).number ?? (child as Record<string, unknown>).short_id ?? "");
+      const childRef = String((child as Record<string, unknown>).short_id ?? "");
       const childTitle = ((child as Record<string, unknown>).title as string) ?? "";
       const childStatus = ((child as Record<string, unknown>).status as string) ?? "";
       const childMsg = JSON.stringify({ command: "showIssue", issueRef: childRef, workspacePath });
